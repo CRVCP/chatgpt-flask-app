@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat with GPT</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="chat-container">
+        <h1>Chat with GPT</h1>
+        <div id="chat-box" class="chat-box"></div>
+        <textarea id="user-input" placeholder="Type your message..."></textarea>
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById("user-input");
+            const message = input.value.trim();
+            if (!message) return;
+
+            appendMessage("You", message);
+            input.value = "";
+
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({message})
+            });
+
+            const data = await response.json();
+            appendMessage("GPT", data.response || data.error);
+        }
+
+        function appendMessage(sender, text) {
+            const chatBox = document.getElementById("chat-box");
+            const messageElem = document.createElement("div");
+            messageElem.classList.add("message");
+            messageElem.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            chatBox.appendChild(messageElem);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
