@@ -2,44 +2,134 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Chat with GPT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChatGPT</title>
     <link rel="stylesheet" href="/static/style.css">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
     <div class="chat-container">
-        <h1>Chat with GPT</h1>
-        <div id="chat-box" class="chat-box"></div>
-        <textarea id="user-input" placeholder="Type your message..."></textarea>
-        <button onclick="sendMessage()">Send</button>
+        <div class="chat-header">
+            <h1>ChatGPT</h1>
+        </div>
+        
+        <div class="main-content">
+            <div id="chat-box" class="chat-box">
+                <!-- Messages will be displayed here -->
+                <div class="welcome-message">
+                    <h2>What are you working on?</h2>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea id="user-input" placeholder="Ask anything"></textarea>
+                    <button onclick="sendMessage()" class="send-button">
+                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-1" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="disclaimer">
+                    ChatGPT can make mistakes. Consider checking important information.
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
+        // Store conversation ID
+        let conversationId = null;
+        
         async function sendMessage() {
             const input = document.getElementById("user-input");
             const message = input.value.trim();
             if (!message) return;
 
-            appendMessage("You", message);
+            // Create and append user message
+            appendMessage("user", message);
             input.value = "";
+            
+            try {
+                const response = await fetch("/chat", {
+                    method: "POST",
+                    headers: {"Content-Type": "application/json"},
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: conversationId
+                    })
+                });
 
-            const response = await fetch("/chat", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({message})
-            });
-
-            const data = await response.json();
-            appendMessage("GPT", data.response || data.error);
+                const data = await response.json();
+                
+                // Store the conversation ID for future requests
+                if (data.conversation_id) {
+                    conversationId = data.conversation_id;
+                }
+                
+                // Create and append assistant message
+                if (data.response) {
+                    appendMessage("assistant", data.response);
+                } else if (data.error) {
+                    appendMessage("error", "Error: " + data.error);
+                }
+            } catch (error) {
+                appendMessage("error", "Network error: Could not connect to server");
+            }
         }
 
-        function appendMessage(sender, text) {
+        function appendMessage(role, text) {
             const chatBox = document.getElementById("chat-box");
+            
+            // Remove welcome message if it exists
+            const welcomeMessage = document.querySelector(".welcome-message");
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
             const messageElem = document.createElement("div");
-            messageElem.classList.add("message");
-            messageElem.innerHTML = `<strong>${sender}:</strong> ${text}`;
+            messageElem.classList.add("message", role + "-message");
+            
+            // For user messages
+            if (role === "user") {
+                messageElem.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-text">${text}</div>
+                    </div>
+                `;
+            } 
+            // For assistant messages
+            else if (role === "assistant") {
+                messageElem.innerHTML = `
+                    <div class="message-content">
+                        <div class="avatar">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
+                        <div class="message-text">${text}</div>
+                    </div>
+                `;
+            }
+            // For error messages
+            else {
+                messageElem.innerHTML = `
+                    <div class="message-content">
+                        <div class="message-text error-text">${text}</div>
+                    </div>
+                `;
+            }
+            
             chatBox.appendChild(messageElem);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
+
+        // Add event listener for Enter key
+        document.getElementById("user-input").addEventListener("keydown", function(event) {
+            if (event.key === "Enter" && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
     </script>
 </body>
 </html>

@@ -81,6 +81,7 @@ h1 {
     height: 100%;
     text-align: center;
     color: #ECECF1;
+    width: 100%;
 }
 
 .welcome-message h2 {
@@ -139,10 +140,11 @@ h1 {
     line-height: 1.5;
     white-space: pre-wrap;
     color: #ECECF1;
+    text-align: left;
 }
 
 .user-message .message-text {
-    text-align: right;
+    text-align: center;
 }
 
 .error-text {
@@ -204,8 +206,15 @@ textarea::placeholder {
     background-color: #565869;
 }
 
-.send-button i {
-    font-size: 14px;
+.send-button svg {
+    color: #ECECF1;
+    width: 16px;
+    height: 16px;
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .disclaimer {
