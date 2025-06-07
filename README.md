@@ -1,4 +1,4 @@
-## 🧠 ChatGPT Flask Assistant
+##  ChatGPT Flask Assistant
 
 This is a web-based chatbot powered by OpenAI’s GPT model, deployed using Flask and Google Cloud Run.
 
